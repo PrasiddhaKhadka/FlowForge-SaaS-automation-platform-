@@ -4,6 +4,6 @@ import app from './app.js'
 const PORT = process.env.PORT || 5000
 
 app.listen(PORT, ()=>{
-    console.log('server running at 8000')
+    console.log(`server running at ${PORT}`)
 })
 
