@@ -4,6 +4,8 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import router from './routes/auth.routes.js';
+import { errorMiddleware } from './middlewares/error.middleware.js';
+import { notFoundMiddleware } from './middlewares/notfound.middleware.js';
 
 dotenv.config()
 
@@ -23,5 +25,9 @@ app.get('/health',(req,res)=>{
 })
 
 app.use('/api/v1',router)
+
+
+app.use(notFoundMiddleware)
+app.use(errorMiddleware)
 
 export default app;
