@@ -41,3 +41,33 @@ export const registerController = async(req:Request,res:Response)=>{
         }
     }
 }
+
+
+export const loginController = async(req:Request,res:Response)=>{
+
+    try {
+        const { email , password} = req.body
+
+        if(!email || !password){
+            console.log('Required')
+        }
+
+        const user = await prisma.user.findUnique({
+            where:{email}
+        })
+
+        if(!user){
+
+        }
+
+        const matchPassword = bcrypt.compare(password,user?.password!)
+
+        if(!matchPassword){
+
+        }
+
+        
+    } catch (error) {
+        
+    }
+}
