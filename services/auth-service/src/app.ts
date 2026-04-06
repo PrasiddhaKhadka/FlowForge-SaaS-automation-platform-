@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import router from './routes/auth.routes.js';
 
 dotenv.config()
 
@@ -20,5 +21,7 @@ app.get('/health',(req,res)=>{
     timestamp: new Date().toISOString(),
   });
 })
+
+app.use('/api/v1',router)
 
 export default app;
