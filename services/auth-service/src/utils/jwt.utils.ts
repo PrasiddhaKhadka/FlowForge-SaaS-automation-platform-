@@ -3,7 +3,9 @@ import crypto from 'crypto';
 
 const ACCESS_TOKEN_SECRET = process.env.JWT_SECRET!;
 const ACCESS_TOKEN_EXPIRY = process.env.JWT_EXPIRATION || '15m';
-const REFRESH_TOKEN_EXPIRES_IN_MS = 1000 * 60 * 60 * 24 * 7
+// const REFRESH_TOKEN_EXPIRES_IN_MS = 1000 * 60 * 60 * 24 * 7
+const REFRESH_TOKEN_EXPIRES_IN_MS = 1000 * 60 * 5
+
 
 export interface TokenPayload{
     userId: string;
