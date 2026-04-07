@@ -2,9 +2,9 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 
 const ACCESS_TOKEN_SECRET = process.env.JWT_SECRET!;
-const ACCESS_TOKEN_EXPIRY = process.env.JWT_EXPIRATION || '15m';
-// const REFRESH_TOKEN_EXPIRES_IN_MS = 1000 * 60 * 60 * 24 * 7
-const REFRESH_TOKEN_EXPIRES_IN_MS = 1000 * 60 * 5
+const ACCESS_TOKEN_EXPIRY = process.env.JWT_EXPIRES_IN || '15m';
+const REFRESH_TOKEN_EXPIRES_IN_MS = 1000 * 60 * 60 * 24 * 7
+
 
 
 export interface TokenPayload{
