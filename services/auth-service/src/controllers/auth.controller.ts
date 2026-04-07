@@ -1,73 +1,107 @@
-import { Request, Response } from "express"
-import { prisma } from "../lib/prisma.js"
-import bcrypt from "bcryptjs"
+import { NextFunction, Request, Response } from "express";
+import { BadRequestError } from "../errors/http.errors.js";
+import { AuthRequest } from "../middlewares/auth.middleware.js";
+import * as authService from "../services/auth.service.js";
 
-export const registerController = async(req:Request,res:Response)=>{
-     try {
-        const { email, firstName, lastName, password } = req.body
 
-        if(!email || !firstName || !lastName || !password){
-            console.log('Such Fields are required !! ')
-        }
-        
-        const userexist = await prisma.user.findUnique({
-            where:{email}
-        })
+export const signup = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { email, password, firstName, lastName } = req.body;
 
-        let saltRound = 10
-        const hashPassword = await bcrypt.hash(password,saltRound)
-
-        console.log(hashPassword)
-
-       if(userexist){
-            throw new Error('ALREADY EXIST YAR ')
-       }
-
-       const user = await prisma.user.create({
-                data:{
-                    email: email,
-                    firstName: firstName,
-                    lastName: lastName,
-                    password:hashPassword,
-                }
-            })
-
-       res.status(200).json(user)
-    } catch (error) {
-        if(error instanceof Error){
-            res.status(500).json({
-                msg:error.message
-            })
-        }
+    if (!email || !password || !firstName || !lastName) {
+      throw new BadRequestError("All fields are required");
     }
-}
 
-
-export const loginController = async(req:Request,res:Response)=>{
-
-    try {
-        const { email , password} = req.body
-
-        if(!email || !password){
-            console.log('Required')
-        }
-
-        const user = await prisma.user.findUnique({
-            where:{email}
-        })
-
-        if(!user){
-
-        }
-
-        const matchPassword = bcrypt.compare(password,user?.password!)
-
-        if(!matchPassword){
-
-        }
-
-        
-    } catch (error) {
-        
+    if (password.length < 8) {
+      throw new BadRequestError("Password must be at least 8 characters");
     }
-}
+
+    const tokens = await authService.signup({
+      email,
+      password,
+      firstName,
+      lastName,
+    });
+
+    res
+      .status(201)
+      .json({ success: true, message: "Account created", ...tokens });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const login = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      throw new BadRequestError("Email and password are required");
+    }
+
+    const tokens = await authService.login({ email, password });
+    res
+      .status(200)
+      .json({ success: true, message: "Login successful", ...tokens });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const refresh = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) throw new BadRequestError("Refresh token is required");
+
+    const tokens = await authService.refresh(refreshToken);
+
+    res.status(200).json({ success: true, ...tokens });
+  } catch (err) {
+    next(err);
+  }
+};
+
+
+export const logout = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) throw new BadRequestError('Refresh token is required');
+
+    await authService.logout(refreshToken);
+    res.status(200).json({ success: true, message: 'Logged out successfully' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+
+export const getMe = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const user = await authService.getMe(req.user!.userId);
+    res.status(200).json({ success: true, data: user });
+  } catch (err) {
+    next(err);
+  }
+};

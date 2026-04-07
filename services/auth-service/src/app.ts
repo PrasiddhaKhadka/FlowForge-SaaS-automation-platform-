@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import router from './routes/auth.routes.js';
+import authRoutes from './routes/auth.routes.js';
 import { errorMiddleware } from './middlewares/error.middleware.js';
 import { notFoundMiddleware } from './middlewares/notfound.middleware.js';
 
@@ -24,7 +24,7 @@ app.get('/health',(req,res)=>{
   });
 })
 
-app.use('/api/v1',router)
+app.use('/api/v1',authRoutes)
 
 
 app.use(notFoundMiddleware)
