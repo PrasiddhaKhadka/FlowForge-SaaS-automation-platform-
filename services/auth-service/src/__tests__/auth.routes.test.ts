@@ -23,6 +23,7 @@ describe("Auth Routes", () => {
   });
 
   // ─── POST /api/v1/signup ───────────────────────────────────────────────────
+  
   describe("POST /api/v1/signup", () => {
     it("should return 201 with tokens on valid input", async () => {
       const res = await request.post("/api/v1/signup").send(TEST_USER);
@@ -101,7 +102,96 @@ describe("Auth Routes", () => {
 
     // ─── POST /api/v1/refresh ──────────────────────────────────────────────────
 
-    
+    describe("POST /api/v1/refresh", () => {
+      it("should return new tokens on valid refresh token", async () => {
+        const signup = await request.post("/api/v1/signup").send(TEST_USER);
 
+        const { refreshToken } = signup.body;
+
+        const res = await request
+          .post("/api/v1/refresh")
+          .send({ refreshToken });
+
+        expect(res.status).toBe(200);
+        expect(res.body).toHaveProperty("accessToken");
+        expect(res.body.refreshToken).not.toBe(refreshToken);
+      });
+
+      it("should return 401 on invalid refresh token", async () => {
+        const res = await request
+          .post("/api/v1/refresh")
+          .send({ refreshToken: "fake-token" });
+
+        expect(res.status).toBe(401);
+      });
+
+      it("should return 400 when refreshToken is missing", async () => {
+        const res = await request.post("/api/v1/refresh").send({});
+
+        expect(res.status).toBe(400);
+      });
+    });
+
+    // ─── POST /api/v1/logout ───────────────────────────────────────────────────
+
+    describe("POST /api/v1/logout", () => {
+      it("should return 200 and invalidate the refresh token", async () => {
+        const signup = await request.post("/api/v1/signup").send(TEST_USER);
+        const { refreshToken } = signup.body;
+
+        const res = await request.post("/api/v1/logout").send({ refreshToken });
+
+        expect(res.status).toBe(200);
+
+        // using the same token after logout should now fail
+        const refreshAttempt = await request
+          .post("/api/v1/refresh")
+          .send({ refreshToken });
+
+        expect(refreshAttempt.status).toBe(401);
+      });
+    });
+
+    // ─── GET /api/v1/me ────────────────────────────────────────────────────────
+
+    describe("GET /api/v1/me", () => {
+      it("should return user data with valid access token", async () => {
+        const signup = await request.post("/api/v1/signup").send(TEST_USER);
+        const { accessToken } = signup.body;
+
+        const res = await request
+          .get("/api/v1/me")
+          .set("Authorization", `Bearer ${accessToken}`);
+
+        expect(res.status).toBe(200);
+        expect(res.body.data.email).toBe(TEST_USER.email);
+        expect(res.body.data).not.toHaveProperty("password");
+      });
+
+      it("should return 401 with no token", async () => {
+        const res = await request.get("/api/v1/me");
+        expect(res.status).toBe(401);
+      });
+
+      it("should return 401 with invalid token", async () => {
+        const res = await request
+          .get("/api/v1/me")
+          .set("Authorization", "Bearer fake.token.here");
+
+        expect(res.status).toBe(401);
+      });
+    });
+    
+    // ─── GET /health ───────────────────────────────────────────────────────────
+
+    describe("GET /health", () => {
+      it("should return service status", async () => {
+        const res = await request.get("/health");
+
+        expect(res.status).toBe(200);
+        expect(res.body.service).toBe("auth-service");
+        expect(res.body.status).toBe("ok");
+      });
+    });
   });
 });
