@@ -19,7 +19,7 @@ const slugify = (name: string) =>
     .replace(/[^a-z0-9-]/g, "");
 
 // ── Create Org ──────────────────────────────────────────────────────────────
-export const createOrg = async (organization: Organization) => {
+export const createOrg = async (userId: string, organization: Organization) => {
   const slug = slugify(organization.organizationName);
 
   const existing = await prisma.organization.findUnique({
